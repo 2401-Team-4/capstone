@@ -168,12 +168,13 @@ window.WebSocket = function (url, protocols) {
   ws.addEventListener("open", () => {
     const networkEventObj = { type: 50 };
     // Request interceptor
-    websocketRequestInterceptor(url, protocols, networkEventObj);
+    websocketOpenInterceptor(url, protocols, networkEventObj);
   });
 
   // WebSocket message event interceptor
   ws.addEventListener("message", (event) => {
     const networkEventObj = { type: 50 };
+    networkEventObj.data = { url };
     // Response interceptor
     websocketMessageInterceptor(event, networkEventObj);
   });
@@ -181,6 +182,7 @@ window.WebSocket = function (url, protocols) {
   // WebSocket close event interceptor
   ws.addEventListener("close", () => {
     const networkEventObj = { type: 50 };
+    networkEventObj.data = { url };
     // Close interceptor
     websocketCloseInterceptor(networkEventObj);
   });
@@ -189,6 +191,7 @@ window.WebSocket = function (url, protocols) {
   const originalSend = ws.send;
   ws.send = function (data) {
     const networkEventObj = { type: 50 };
+    networkEventObj.data = { url };
     // Outgoing message interceptor
     websocketSendInterceptor(data, networkEventObj);
     originalSend.call(this, data);
@@ -198,47 +201,51 @@ window.WebSocket = function (url, protocols) {
 };
 
 // Function to intercept WebSocket open event
-const websocketRequestInterceptor = (url, protocols, networkEventObj) => {
+const websocketOpenInterceptor = (url, protocols, networkEventObj) => {
+  networkEventObj.timestamp = Date.now();
   networkEventObj.data = {
+    ...networkEventObj.data,
     url: url,
     type: "WebSocket",
     event: "open",
-    timestamp: Date.now(),
   };
   events.push(networkEventObj);
 };
 
 // Function to intercept WebSocket message event
 const websocketMessageInterceptor = (event, networkEventObj) => {
+  networkEventObj.timestamp = Date.now();
   networkEventObj.data = {
+    ...networkEventObj.data,
     type: "WebSocket",
     event: "message",
     // may need to not capture as could cause problems with larger messages
     message: event.data,
-    timestamp: Date.now(),
   };
   events.push(networkEventObj);
 };
 
 // Function to intercept WebSocket close event
 const websocketCloseInterceptor = (networkEventObj) => {
+  networkEventObj.timestamp = Date.now();
   networkEventObj.data = {
+    ...networkEventObj.data,
     type: "WebSocket",
     // could add capturing of optional close parameters
     event: "close",
-    timestamp: Date.now(),
   };
   events.push(networkEventObj);
 };
 
 // Function to intercept outgoing WebSocket messages
 const websocketSendInterceptor = (data, networkEventObj) => {
+  networkEventObj.timestamp = Date.now();
   networkEventObj.data = {
+    ...networkEventObj.data,
     type: "WebSocket",
     event: "send",
     // may need to remove if sending too much data
     message: data,
-    timestamp: Date.now(),
   };
   events.push(networkEventObj);
 };

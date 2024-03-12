@@ -62,16 +62,25 @@ function App() {
     const list = document.getElementById("network-list");
 
     eventsArr.forEach((event) => {
-      const listItem = document.createElement("li");
-      // we're recording the time the response to the request was received at as event.timestamp to keep the events array in order
-      //      we push the network event to the events array AFTER the response is received so we can capture all the desired data
-      // we believe we should present the relative time of these network requests pertaining to when the request was made
-      const relTime = relativeTime(event.data.requestMadeAt);
-      listItem.textContent = `${formatTime(relTime)} | ${event.data.type} | ${
-        event.data.method
-      } | ${event.data.url} | Status: ${event.data.status} | Latency: ${
-        event.data.latency
-      }ms`;
+      let listItem = document.createElement("li");
+      let relTime;
+
+      if (event.data.type === "WebSocket") {
+        relTime = relativeTime(event.timestamp);
+        listItem.textContent = `${formatTime(relTime)} | ${event.data.type} | ${
+          event.data.event
+        } | ${event.data.url}`;
+      } else {
+        // we're recording the time the response to the request was received at as event.timestamp to keep the events array in order
+        //      we push the network event to the events array AFTER the response is received so we can capture all the desired data
+        // we believe we should present the relative time of these network requests pertaining to when the request was made
+        relTime = relativeTime(event.data.requestMadeAt);
+        listItem.textContent = `${formatTime(relTime)} | ${event.data.type} | ${
+          event.data.method
+        } | ${event.data.url} | Status: ${event.data.status} | Latency: ${
+          event.data.latency
+        }ms`;
+      }
 
       listItem.onclick = () => {
         if (playerState === "paused") {
