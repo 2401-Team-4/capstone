@@ -154,6 +154,97 @@ window.addEventListener("beforeunload", (e) => {
   window.fetch = originalFetch;
 });
 
+// websocket intercepting begin
+
+// Store a reference to the original WebSocket constructor
+const OriginalWebSocket = window.WebSocket;
+
+// Override the WebSocket constructor
+window.WebSocket = function (url, protocols) {
+  // Create a new WebSocket instance
+  const ws = new OriginalWebSocket(url, protocols);
+
+  // WebSocket open event interceptor
+  ws.addEventListener("open", () => {
+    const networkEventObj = { type: 50 };
+    // Request interceptor
+    websocketRequestInterceptor(url, protocols, networkEventObj);
+  });
+
+  // WebSocket message event interceptor
+  ws.addEventListener("message", (event) => {
+    const networkEventObj = { type: 50 };
+    // Response interceptor
+    websocketMessageInterceptor(event, networkEventObj);
+  });
+
+  // WebSocket close event interceptor
+  ws.addEventListener("close", () => {
+    const networkEventObj = { type: 50 };
+    // Close interceptor
+    websocketCloseInterceptor(networkEventObj);
+  });
+
+  // Override the send method to intercept outgoing messages
+  const originalSend = ws.send;
+  ws.send = function (data) {
+    const networkEventObj = { type: 50 };
+    // Outgoing message interceptor
+    websocketSendInterceptor(data, networkEventObj);
+    originalSend.call(this, data);
+  };
+
+  return ws;
+};
+
+// Function to intercept WebSocket open event
+const websocketRequestInterceptor = (url, protocols, networkEventObj) => {
+  networkEventObj.data = {
+    url: url,
+    type: "WebSocket",
+    event: "open",
+    timestamp: Date.now(),
+  };
+  events.push(networkEventObj);
+};
+
+// Function to intercept WebSocket message event
+const websocketMessageInterceptor = (event, networkEventObj) => {
+  networkEventObj.data = {
+    type: "WebSocket",
+    event: "message",
+    // may need to not capture as could cause problems with larger messages
+    message: event.data,
+    timestamp: Date.now(),
+  };
+  events.push(networkEventObj);
+};
+
+// Function to intercept WebSocket close event
+const websocketCloseInterceptor = (networkEventObj) => {
+  networkEventObj.data = {
+    type: "WebSocket",
+    // could add capturing of optional close parameters
+    event: "close",
+    timestamp: Date.now(),
+  };
+  events.push(networkEventObj);
+};
+
+// Function to intercept outgoing WebSocket messages
+const websocketSendInterceptor = (data, networkEventObj) => {
+  networkEventObj.data = {
+    type: "WebSocket",
+    event: "send",
+    // may need to remove if sending too much data
+    message: data,
+    timestamp: Date.now(),
+  };
+  events.push(networkEventObj);
+};
+
+// websocket intercepting end
+
 const ws = new WebSocket("ws://localhost:3000");
 ws.onopen = () => {
   console.log("ws opened on browser");
@@ -220,6 +311,13 @@ const TargetApp = () => {
         }}
       >
         XHR JSON Placeholder
+      </button>
+      <button
+        onClick={() => {
+          ws.close();
+        }}
+      >
+        Close WS Connection
       </button>
     </>
   );
