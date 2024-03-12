@@ -154,6 +154,16 @@ window.addEventListener("beforeunload", (e) => {
   window.fetch = originalFetch;
 });
 
+const ws = new WebSocket("ws://localhost:3000");
+ws.onopen = () => {
+  console.log("ws opened on browser");
+  ws.send("hello world");
+};
+
+ws.onmessage = (message) => {
+  console.log(`message received`, message.data);
+};
+
 //This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
 // const save = async () => {
 //   try {
