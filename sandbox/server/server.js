@@ -1,16 +1,37 @@
 const express = require("express");
 const cors = require("cors");
+const requestIp = require("request-ip");
 const uap = require("ua-parser-js");
 const app = express();
 const port = 3001;
-
 app.use(cors());
 app.use(express.json());
 
+const ipMiddleware = function (req, res, next) {
+  if (!userMetaData.ip) {
+    userMetaData.ip = requestIp.getClientIp(req);
+  }
+
+  next();
+};
+
+app.use(ipMiddleware);
+
 const allRecordedEvents = [];
 
+const userMetaData = {
+  ip: null,
+  browser: null,
+  os: null,
+};
+
 app.post("/record", (req, res) => {
-  let ua = uap(req.headers["user-agent"]);
+  if (!userMetaData.browser || !userMetaData.os) {
+    let ua = uap(req.headers["user-agent"]);
+    userMetaData.browser = ua.browser;
+    userMetaData.os = ua.os;
+  }
+  console.log(userMetaData);
   /* ua references this object
   {
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -21,7 +42,8 @@ app.post("/record", (req, res) => {
     cpu: { architecture: 'amd64' }
   }
   */
-  console.log(ua);
+  //Could assign a property to the batchOfEvents array that references this `ua` object, that way we can grab the metadata from any batch of events
+  //  If we were to do that, would need to extract on client before flattening the 2 dimensional array
   const batchOfEvents = req.body;
   // let consolePayloads = batchOfEvents.filter((obj) => obj.data.plugin);
   // if (consolePayloads.length > 0) {
