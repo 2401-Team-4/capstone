@@ -8,8 +8,8 @@ app.use(cors());
 app.use(express.json());
 
 const ipMiddleware = function (req, res, next) {
-  if (!userMetaData.ip) {
-    userMetaData.ip = requestIp.getClientIp(req);
+  if (!userMetadata.ip) {
+    userMetadata.ip = requestIp.getClientIp(req);
   }
 
   next();
@@ -19,19 +19,19 @@ app.use(ipMiddleware);
 
 const allRecordedEvents = [];
 
-const userMetaData = {
+const userMetadata = {
   ip: null,
   browser: null,
   os: null,
 };
 
 app.post("/record", (req, res) => {
-  if (!userMetaData.browser || !userMetaData.os) {
+  if (!userMetadata.browser || !userMetadata.os) {
     let ua = uap(req.headers["user-agent"]);
-    userMetaData.browser = ua.browser;
-    userMetaData.os = ua.os;
+    userMetadata.browser = ua.browser;
+    userMetadata.os = ua.os;
   }
-  console.log(userMetaData);
+  console.log(userMetadata);
   /* ua references this object
   {
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -68,7 +68,11 @@ app.post("/record", (req, res) => {
 });
 
 app.get("/allRecordedEvents", (req, res) => {
-  res.json(allRecordedEvents);
+  const sessionData = {
+    events: allRecordedEvents,
+    userMetadata,
+  };
+  res.json(sessionData);
 });
 
 app.get("/random", (req, res) => {

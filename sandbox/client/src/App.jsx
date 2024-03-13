@@ -20,7 +20,7 @@ function App() {
         throw new Error(`Failed to fetch events: ${response.status}`);
       }
 
-      const events = await response.json();
+      const { events, userMetadata } = await response.json();
       if (events.length === 0) {
         throw new Error("Event data is empty.");
       }
@@ -49,9 +49,27 @@ function App() {
 
       const networkEvents = extractNetworkEvents(combinedEvents);
       populateNetworkDiv(networkEvents);
+
+      populateMetadataDiv(userMetadata);
     } catch (error) {
       setError(error.message || "Error fetching events");
     }
+  };
+
+  const populateMetadataDiv = (userMetadata) => {
+    const list = document.getElementById("metadata-list");
+    const ip = document.createElement("li");
+    ip.textContent = userMetadata.ip;
+
+    const browser = document.createElement("li");
+    browser.textContent = `${userMetadata.browser.name} V${userMetadata.browser.version}`;
+
+    const os = document.createElement("li");
+    os.textContent = `${userMetadata.os.name} V${userMetadata.os.version}`;
+
+    [ip, browser, os].forEach((li) => {
+      list.appendChild(li);
+    });
   };
 
   const extractNetworkEvents = (eventsArr) => {
@@ -166,6 +184,10 @@ function App() {
       <div id="network">
         <h1>Network:</h1>
         <ul id="network-list"></ul>
+      </div>
+      <div id="metadata">
+        <h1>User Metadata:</h1>
+        <ul id="metadata-list"></ul>
       </div>
     </>
   );
