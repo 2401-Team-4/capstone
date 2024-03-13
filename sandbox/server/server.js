@@ -37,7 +37,6 @@ app.post("/record", (req, res) => {
     userMetadata.browser = ua.browser;
     userMetadata.os = ua.os;
   }
-  console.log(userMetadata);
   /* ua references this object
   {
     ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -48,8 +47,6 @@ app.post("/record", (req, res) => {
     cpu: { architecture: 'amd64' }
   }
   */
-  //Could assign a property to the batchOfEvents array that references this `ua` object, that way we can grab the metadata from any batch of events
-  //  If we were to do that, would need to extract on client before flattening the 2 dimensional array
   const batchOfEvents = req.body;
   // let consolePayloads = batchOfEvents.filter((obj) => obj.data.plugin);
   // if (consolePayloads.length > 0) {
@@ -86,7 +83,7 @@ app.get("/random", (req, res) => {
 });
 
 app.delete("/deleteTest", (req, res) => {
-  res.status(500).json("deleted");
+  res.status(404).json("deleted");
 });
 
 app.listen(port, () => {

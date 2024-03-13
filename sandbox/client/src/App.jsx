@@ -47,6 +47,9 @@ function App() {
       const consoleEvents = extractConsoleEvents(combinedEvents);
       populateConsoleDiv(consoleEvents);
 
+      const errorEvents = extractErrorEvents(combinedEvents);
+      populateErrorDiv(errorEvents);
+
       const networkEvents = extractNetworkEvents(combinedEvents);
       populateNetworkDiv(networkEvents);
 
@@ -54,6 +57,15 @@ function App() {
     } catch (error) {
       setError(error.message || "Error fetching events");
     }
+  };
+
+  const extractErrorEvents = (eventsArr) => {
+    return eventsArr.filter((obj) => {
+      return (
+        obj.data.plugin === "rrweb/console@1" &&
+        obj.data.payload.level === "error"
+      );
+    });
   };
 
   const populateMetadataDiv = (userMetadata) => {
@@ -77,6 +89,31 @@ function App() {
 
   const extractNetworkEvents = (eventsArr) => {
     return eventsArr.filter((obj) => obj.type === 50);
+  };
+
+  const populateErrorDiv = (eventsArr) => {
+    console.log(eventsArr);
+    const list = document.getElementById("error-list");
+
+    eventsArr.forEach((event) => {
+      const listItem = document.createElement("li");
+      const relTime = relativeTime(event.timestamp);
+      listItem.textContent = `${formatTime(relTime)} | ${
+        event.data.payload.payload
+      }`;
+
+      listItem.onclick = () => {
+        if (playerState === "paused") {
+          player.play(); // prevents session replay from restarting from beginning if replay was at end
+          player.goto(Math.floor(relTime * 1000));
+          player.pause(); // returns to paused state for UX
+        } else {
+          player.goto(Math.floor(relTime * 1000));
+        }
+      };
+
+      list.appendChild(listItem);
+    });
   };
 
   const populateNetworkDiv = (eventsArr) => {
@@ -118,7 +155,11 @@ function App() {
   };
 
   const extractConsoleEvents = (eventsArr) => {
-    return eventsArr.filter((obj) => obj.data.plugin === "rrweb/console@1");
+    return eventsArr.filter(
+      (obj) =>
+        obj.data.plugin === "rrweb/console@1" &&
+        obj.data.payload.level !== "error"
+    );
   };
 
   const populateConsoleDiv = (eventsArr) => {
@@ -187,6 +228,10 @@ function App() {
       <div id="network">
         <h1>Network:</h1>
         <ul id="network-list"></ul>
+      </div>
+      <div id="error">
+        <h1>Errors:</h1>
+        <ul id="error-list"></ul>
       </div>
       <div id="metadata">
         <h1>User Metadata:</h1>
