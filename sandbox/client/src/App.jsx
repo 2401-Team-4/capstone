@@ -59,15 +59,18 @@ function App() {
   const populateMetadataDiv = (userMetadata) => {
     const list = document.getElementById("metadata-list");
     const ip = document.createElement("li");
-    ip.textContent = userMetadata.ip;
+    ip.textContent = `IP: ${userMetadata.ip}`;
+
+    const country = document.createElement("li");
+    country.textContent = `Country: ${userMetadata.location}`;
 
     const browser = document.createElement("li");
-    browser.textContent = `${userMetadata.browser.name} V${userMetadata.browser.version}`;
+    browser.textContent = `Browser: ${userMetadata.browser.name} V ${userMetadata.browser.version}`;
 
     const os = document.createElement("li");
-    os.textContent = `${userMetadata.os.name} V${userMetadata.os.version}`;
+    os.textContent = `OS: ${userMetadata.os.name} V ${userMetadata.os.version}`;
 
-    [ip, browser, os].forEach((li) => {
+    [ip, country, browser, os].forEach((li) => {
       list.appendChild(li);
     });
   };

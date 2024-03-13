@@ -9,7 +9,12 @@ app.use(express.json());
 
 const ipMiddleware = function (req, res, next) {
   if (!userMetadata.ip) {
+    //let testIP = "68.145.123.233";
+    //userMetadata.ip = testIP;
     userMetadata.ip = requestIp.getClientIp(req);
+    fetch(`https://api.country.is/${userMetadata.ip}`)
+      .then((res) => res.json())
+      .then((data) => (userMetadata.location = data.country));
   }
 
   next();
@@ -23,6 +28,7 @@ const userMetadata = {
   ip: null,
   browser: null,
   os: null,
+  location: null,
 };
 
 app.post("/record", (req, res) => {
