@@ -58,6 +58,7 @@ const fetchResponseInterceptor = (response, networkEventObj) => {
   networkEventObj.data.status = response.status;
 };
 
+// XHR interceptor begin
 const originalXHROpen = window.XMLHttpRequest.prototype.open;
 window.XMLHttpRequest.prototype.open = function (...args) {
   let [method, url] = args;
@@ -171,10 +172,13 @@ window.addEventListener("beforeunload", (e) => {
   stopRecording();
   clearInterval(saveEventsInterval);
   save();
+  // May be unnecessary to reassign original handlers
   window.fetch = originalFetch;
+  window.XMLHttpRequest.open = originalXHROpen;
+  window.WebSocket = OriginalWebSocket;
 });
 
-// websocket intercepting begin
+// Websocket intercepting begin
 
 // Store a reference to the original WebSocket constructor
 const OriginalWebSocket = window.WebSocket;
@@ -269,8 +273,6 @@ const websocketSendInterceptor = (data, networkEventObj) => {
   };
   events.push(networkEventObj);
 };
-
-// websocket intercepting end
 
 const ws = new WebSocket("ws://localhost:3000");
 ws.onopen = () => {

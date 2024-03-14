@@ -24,13 +24,14 @@ function App() {
       if (events.length === 0) {
         throw new Error("Event data is empty.");
       }
-
+      
+      setError(null);
+      
       const combinedEvents = events.reduce(
         (allEvents, currentBatch) => allEvents.concat(currentBatch),
         []
       );
 
-      setError(null);
       initialTimeStamp = combinedEvents[0].timestamp;
       player = new rrwebPlayer({
         target: document.getElementById("replayer"),
