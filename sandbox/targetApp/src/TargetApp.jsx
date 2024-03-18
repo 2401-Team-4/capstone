@@ -120,67 +120,7 @@ const xhrResponseInterceptor = function (networkEventObj) {
   events.push(networkEventObj);
 };
 
-const stopRecording = record({
-  emit(event) {
-    events.push(event);
-
-    const defaultLog = console.log["__rrweb_original__"]
-      ? console.log["__rrweb_original__"]
-      : console.log;
-  },
-  plugins: [getRecordConsolePlugin()],
-});
-
-const save = () => {
-  if (events.length === 0) {
-    return;
-  }
-
-  const body = JSON.stringify(events);
-  events = [];
-
-  fetch("http://localhost:3001/record", {
-    credentials: "include",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body,
-  });
-};
-
-//This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
-// const save = async () => {
-//   try {
-//     const body = JSON.stringify(events);
-//     const response = await fetch("http://localhost:3001/record", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body,
-//     });
-//     // After a successful post to the server, clear the events array
-//     events = [];
-//   } catch (e) {
-//     // If saving is unsuccessful, do not want to wipe events
-//     console.error("Event Save Error: ", e);
-//   }
-// };
-const saveEventsInterval = setInterval(save, 5000);
-
-window.addEventListener("beforeunload", (e) => {
-  stopRecording();
-  clearInterval(saveEventsInterval);
-  save();
-  // May be unnecessary to reassign original handlers
-  window.fetch = originalFetch;
-  window.XMLHttpRequest.open = originalXHROpen;
-  window.WebSocket = OriginalWebSocket;
-});
-
 // Websocket intercepting begin
-
 // Store a reference to the original WebSocket constructor
 const OriginalWebSocket = window.WebSocket;
 
@@ -274,6 +214,65 @@ const websocketSendInterceptor = (data, networkEventObj) => {
   };
   events.push(networkEventObj);
 };
+
+const stopRecording = record({
+  emit(event) {
+    events.push(event);
+
+    const defaultLog = console.log["__rrweb_original__"]
+      ? console.log["__rrweb_original__"]
+      : console.log;
+  },
+  plugins: [getRecordConsolePlugin()],
+});
+
+const save = () => {
+  if (events.length === 0) {
+    return;
+  }
+
+  const body = JSON.stringify(events);
+  events = [];
+
+  fetch("http://localhost:3001/record", {
+    credentials: "include",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body,
+  });
+};
+
+//This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
+// const save = async () => {
+//   try {
+//     const body = JSON.stringify(events);
+//     const response = await fetch("http://localhost:3001/record", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body,
+//     });
+//     // After a successful post to the server, clear the events array
+//     events = [];
+//   } catch (e) {
+//     // If saving is unsuccessful, do not want to wipe events
+//     console.error("Event Save Error: ", e);
+//   }
+// };
+const saveEventsInterval = setInterval(save, 5000);
+
+window.addEventListener("beforeunload", (e) => {
+  stopRecording();
+  clearInterval(saveEventsInterval);
+  save();
+  // May be unnecessary to reassign original handlers
+  window.fetch = originalFetch;
+  window.XMLHttpRequest.prototype.open = originalXHROpen;
+  window.WebSocket = OriginalWebSocket;
+});
 
 const ws = new WebSocket("ws://localhost:3000");
 ws.onopen = () => {

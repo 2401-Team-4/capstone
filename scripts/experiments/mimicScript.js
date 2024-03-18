@@ -268,6 +268,6 @@ window.addEventListener("beforeunload", (e) => {
   save();
   // May be unnecessary to reassign original handlers
   window.fetch = originalFetch;
-  window.XMLHttpRequest.open = originalXHROpen;
+  window.XMLHttpRequest.prototype.open = originalXHROpen;
   window.WebSocket = OriginalWebSocket;
 });
