@@ -1,5 +1,4 @@
 import { record, getRecordConsolePlugin } from "rrweb";
-import axios from "axios";
 
 let events = [];
 
@@ -120,70 +119,9 @@ const xhrResponseInterceptor = function (networkEventObj) {
   events.push(networkEventObj);
 };
 
-const stopRecording = record({
-  emit(event) {
-    events.push(event);
-
-    const defaultLog = console.log["__rrweb_original__"]
-      ? console.log["__rrweb_original__"]
-      : console.log;
-  },
-  plugins: [getRecordConsolePlugin()],
-});
-
-const save = () => {
-  if (events.length === 0) {
-    return;
-  }
-
-  const body = JSON.stringify(events);
-  events = [];
-
-  fetch("http://localhost:3001/record", {
-    credentials: "include",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body,
-  });
-};
-
-//This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
-// const save = async () => {
-//   try {
-//     const body = JSON.stringify(events);
-//     const response = await fetch("http://localhost:3001/record", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body,
-//     });
-//     // After a successful post to the server, clear the events array
-//     events = [];
-//   } catch (e) {
-//     // If saving is unsuccessful, do not want to wipe events
-//     console.error("Event Save Error: ", e);
-//   }
-// };
-const saveEventsInterval = setInterval(save, 5000);
-
-window.addEventListener("beforeunload", (e) => {
-  stopRecording();
-  clearInterval(saveEventsInterval);
-  save();
-  // May be unnecessary to reassign original handlers
-  window.fetch = originalFetch;
-  window.XMLHttpRequest.open = originalXHROpen;
-  window.WebSocket = OriginalWebSocket;
-});
-
 // Websocket intercepting begin
-
 // Store a reference to the original WebSocket constructor
 const OriginalWebSocket = window.WebSocket;
-
 // Override the WebSocket constructor
 window.WebSocket = function (url, protocols) {
   // Create a new WebSocket instance
@@ -275,73 +213,61 @@ const websocketSendInterceptor = (data, networkEventObj) => {
   events.push(networkEventObj);
 };
 
-const ws = new WebSocket("ws://localhost:3000");
-ws.onopen = () => {
-  console.log("ws opened on browser");
-  ws.send("hello world");
+const stopRecording = record({
+  emit(event) {
+    events.push(event);
+
+    const defaultLog = console.log["__rrweb_original__"]
+      ? console.log["__rrweb_original__"]
+      : console.log;
+  },
+  plugins: [getRecordConsolePlugin()],
+});
+
+const save = () => {
+  if (events.length === 0) {
+    return;
+  }
+
+  const body = JSON.stringify(events);
+  events = [];
+
+  fetch("http://localhost:3001/record", {
+    credentials: "include",
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body,
+  });
 };
 
-ws.onmessage = (message) => {
-  console.log(`message received`, message.data);
-};
+//This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
+// const save = async () => {
+//   try {
+//     const body = JSON.stringify(events);
+//     const response = await fetch("http://localhost:3001/record", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body,
+//     });
+//     // After a successful post to the server, clear the events array
+//     events = [];
+//   } catch (e) {
+//     // If saving is unsuccessful, do not want to wipe events
+//     console.error("Event Save Error: ", e);
+//   }
+// };
+const saveEventsInterval = setInterval(save, 5000);
 
-const TargetApp = () => {
-  return (
-    <>
-      <h1 onClick={() => console.log("Hello world clicked")}>Hello world!</h1>
-      <h3 onClick={() => console.log("Welcome message clicked")}>
-        Welcome to my site!
-      </h3>
-      <input type="text" onChange={() => console.log("typed in input")}></input>
-      <button onClick={() => console.error(new Error())}>
-        Click for error
-      </button>
-      <button
-        onClick={() =>
-          fetch("http://localhost:3001/random")
-            .then((res) => console.log("successful random"))
-            .catch((rej) => console.log("failure random"))
-        }
-      >
-        FETCH Get Random
-      </button>
-      <button
-        onClick={() =>
-          fetch("http://localhost:3001/deleteTest", { method: "DELETE" })
-            .then((res) => console.log("successful delete"))
-            .catch((rej) => console.log("failure delete"))
-        }
-      >
-        Delete
-      </button>
-      <button
-        onClick={() => {
-          const req = new XMLHttpRequest();
-          req.addEventListener("load", () => console.log("successful XHR"));
-          req.open("GET", "https://jsonplaceholder.typicode.com/todos/1");
-          req.send();
-        }}
-      >
-        XHR JSON Placeholder
-      </button>
-      <button
-        onClick={() => {
-          ws.close();
-        }}
-      >
-        Close WS Connection
-      </button>
-      <button
-        onClick={() =>
-          axios
-            .get("http://localhost:3001/random")
-            .then(() => console.log("successful axios"))
-        }
-      >
-        Axios
-      </button>
-    </>
-  );
-};
-
-export default TargetApp;
+window.addEventListener("beforeunload", (e) => {
+  stopRecording();
+  clearInterval(saveEventsInterval);
+  save();
+  // May be unnecessary to reassign original handlers
+  window.fetch = originalFetch;
+  window.XMLHttpRequest.open = originalXHROpen;
+  window.WebSocket = OriginalWebSocket;
+});
