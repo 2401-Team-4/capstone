@@ -3,7 +3,7 @@ MIMIC_TEMPLATE = """
 import {{ record, getRecordConsolePlugin }} from "rrweb";
 
 let events = [];
-const projectId = "{projectId}"
+const projectId = "{projectId}";
 
 const originalFetch = window.fetch;
 window.fetch = async (...args) => {{
