@@ -26,8 +26,6 @@ const fetchRequestInterceptor = (resource, config, networkEventObj) => {
       type: "FETCH",
       requestMadeAt: Date.now(),
       method: resource.method,
-      // headers: resource.headers,
-      // body: resource.body ? resource.body.slice(0, 120) : undefined,
     };
   } else {
     networkEventObj.data = {
@@ -35,12 +33,6 @@ const fetchRequestInterceptor = (resource, config, networkEventObj) => {
       type: "FETCH",
       requestMadeAt: Date.now(),
       method: config ? (config.method ? config.method : "GET") : "GET",
-      // headers: config ? config.headers : undefined,
-      // body: config
-      //   ? config.body
-      //     ? config.body.slice(0, 120)
-      //     : undefined
-      //   : undefined,
     };
   }
 };
@@ -100,8 +92,6 @@ const xhrRequestInterceptor = (method, url, networkEventObj) => {
     type: "XHR",
     method: method,
     requestMadeAt: Date.now(),
-    // headers: config.headers
-    // body: config.body.slice(0, 120),
   };
 };
 
@@ -122,6 +112,7 @@ const xhrResponseInterceptor = function (networkEventObj) {
 // Websocket intercepting begin
 // Store a reference to the original WebSocket constructor
 const OriginalWebSocket = window.WebSocket;
+
 // Override the WebSocket constructor
 window.WebSocket = function (url, protocols) {
   // Create a new WebSocket instance
@@ -242,24 +233,6 @@ const save = () => {
   });
 };
 
-//This code seems more correct, but alters the event data sent, and misses network requests. Related to async vs sync?
-// const save = async () => {
-//   try {
-//     const body = JSON.stringify(events);
-//     const response = await fetch("http://localhost:3001/record", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body,
-//     });
-//     // After a successful post to the server, clear the events array
-//     events = [];
-//   } catch (e) {
-//     // If saving is unsuccessful, do not want to wipe events
-//     console.error("Event Save Error: ", e);
-//   }
-// };
 const saveEventsInterval = setInterval(save, 5000);
 
 window.addEventListener("beforeunload", (e) => {
