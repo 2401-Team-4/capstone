@@ -11,6 +11,15 @@ const {
   retrieveMetadata,
   findSessionIds,
 } = require("../utils/sessionHelpers.js");
+const { restart } = require("nodemon");
+
+sessionsRouter.post("/new", async (req, res) => {
+  // collects all new project IDs and add them to the database
+  const projectId = req.body.projectId;
+  console.log(`New Project: ${projectId}`)
+  res.status(200)
+  res.send()
+}) 
 
 sessionsRouter.get("/:projectId", async (req, res) => {
   // requests all sessions associated with a project id
